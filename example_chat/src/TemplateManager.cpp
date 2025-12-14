@@ -1,5 +1,5 @@
 /*
- * ofxLlamaCpp
+ * ofxRAG
  *
  * Copyright (c) 2025 Yannick Hofmann
  * <contact@yannickhofmann.de>
