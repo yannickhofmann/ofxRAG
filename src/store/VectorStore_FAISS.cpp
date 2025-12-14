@@ -43,7 +43,7 @@ std::vector<SearchResult> VectorStore_FAISS::search(const Embedding& query, int 
         return results;
     }
 
-    std::vector<long> labels(k);
+    std::vector<faiss::idx_t> labels(k);
     std::vector<float> distances(k);
 
     index->search(1, query.data(), k, distances.data(), labels.data());

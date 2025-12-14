@@ -1,8 +1,8 @@
 meta:
 	ADDON_NAME = ofxRAG
 	ADDON_DESCRIPTION = Retrieval-augmented generation helpers (ONNX Runtime, SentencePiece, FAISS)
-	ADDON_AUTHOR = ofxRAG contributors
-	ADDON_TAGS = "rag" "ml" "onnx" "faiss"
+	ADDON_AUTHOR = Yannick Hofmann
+	ADDON_TAGS = "rag" "ml" "onnx" "faiss" "sentencepiece" "retrieval" "ai"
 
 common:
 	ADDON_DEPENDENCIES = ofxDropdown ofxGui
@@ -29,9 +29,13 @@ linux64:
 	ADDON_LDFLAGS += -fopenmp -lgomp -llapack -lblas
 
 osx:
-	ADDON_LIBS = libs/onnxruntime/lib/osx_arm64/libonnxruntime.dylib
+	ADDON_LIBS = libs/onnxruntime/lib/macos/libonnxruntime.dylib
 	ADDON_LIBS += libs/sentencepiece/lib/libsentencepiece.a
 	ADDON_LIBS += libs/faiss/lib/libfaiss.a
+	ADDON_LIBS += /opt/homebrew/opt/libomp/lib/libomp.dylib
 
+	ADDON_CFLAGS = -I/opt/homebrew/opt/libomp/include -Xpreprocessor -fopenmp
+	
 	ADDON_LDFLAGS = -Wl,-rpath,@loader_path/../libs
-	ADDON_LDFLAGS += -Wl,-rpath,$(addon)/libs/onnxruntime/lib/osx_arm64
+	ADDON_LDFLAGS += -Wl,-rpath,$(abspath $(OF_ROOT))/addons/ofxRAG/libs/onnxruntime/lib/macos
+	ADDON_LDFLAGS += -L/opt/homebrew/opt/libomp/lib
