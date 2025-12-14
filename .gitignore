@@ -58,3 +58,8 @@ Thumbs.db
 *.log
 *.tmp
 
+# --- allow specific font for example_chat ---
+!example_chat/bin/
+!example_chat/bin/data/
+!example_chat/bin/data/fonts/
+!example_chat/bin/data/fonts/verdana.ttf
