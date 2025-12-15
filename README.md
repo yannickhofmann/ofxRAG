@@ -2,7 +2,6 @@
 
 openFrameworks addon for low-level Retrieval-Augmented Generation (RAG).
 
-
 ## What is ofxRAG?
 
 ofxRAG brings retrieval-augmented context building into the openFrameworks ecosystem.  
@@ -21,12 +20,14 @@ Together, ofxRAG and ofxLlamaCpp enable fully local, offline, and transparent Re
 
 ## Tested Environments
 
-ofxLlamaCpp has been validated on:
+ofxRAG has been validated on:
 
 *   Ubuntu 24.04.3 LTS
+*   macOS (Apple Silicon M2)
 *   openFrameworks:
     *   `of_v0.12.0_linux64gcc6_release`
     *   `of_v0.12.1_linux64_gcc6_release`
+
 
 ## Dependencies
 
