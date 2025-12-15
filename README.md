@@ -4,8 +4,7 @@ openFrameworks addon for low-level Retrieval-Augmented Generation (RAG).
 
 ## What is ofxRAG?
 
-ofxRAG brings retrieval-augmented context building into the openFrameworks ecosystem.  
-It acts as a low-level bridge between:
+ofxRAG brings retrieval-augmented context building into the openFrameworks ecosystem. It acts as a low-level bridge between:
 
 * **openFrameworks (oF)**  
 * **SentencePiece**  
