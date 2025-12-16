@@ -174,3 +174,12 @@ size_t VectorStore_FAISS::size() const {
     return 0;
 #endif
 }
+
+//--------------------------------------------------------------
+std::vector<std::string> VectorStore_FAISS::getSources() const {
+    std::set<std::string> unique_sources;
+    for (const auto& metadata : metadatas) {
+        unique_sources.insert(metadata.source);
+    }
+    return std::vector<std::string>(unique_sources.begin(), unique_sources.end());
+}

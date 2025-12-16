@@ -11,7 +11,9 @@
  
 #include "ofApp.h"
 #include "ofxGui.h"
-#include <algorithm> // For std::min/max
+#include "ofxPoDoFo.h"
+#include "store/VectorStore_Cosine.h" // Specific vector store for Cosine similarity
+#include "store/VectorStore_FAISS.h" // Specific vector store for FAISS
 
 // --- HELPER FUNCTIONS ---
 
@@ -39,21 +41,25 @@ void ofApp::setup() {
     // Initialize ofxRAG and set the T5 Text Embedder
     rag.setup();
     rag.setTextEmbedder(std::make_shared<TextEmbedding_T5>());
-    rag.setVectorStore(std::make_shared<VectorStore_Cosine>()); // Initialize with default Cosine store
+    rag.setVectorStore(std::make_shared<VectorStore_FAISS>(768)); // Initialize with FAISS store
 
     // Add some sample text to the RAG store
     
     // Define the default system prompt for the AI
     system_prompt =
-        "You are a specialized AI assistant, the 'Context Guardian'. Your sole purpose is to answer questions based *exclusively* on the provided 'RAG CONTEXT'. You have no memory or knowledge beyond what is in this context."
+        "You are a specialized AI assistant, the \"Context Guardian\"."
         "\n\n"
-        "**Your Core Directives:**\n"
-        "1.  **Strictly Adhere to Context:** Every part of your answer must be directly traceable to the 'RAG CONTEXT'. Do not infer, guess, or use any external knowledge.\n"
-        "2.  **No Outside Information:** If the context does not contain the answer, you *must* state: \"The provided context does not contain enough information to answer this question.\" Do not apologize or try to find the answer elsewhere.\n"
-        "3.  **Precision and Brevity:** Answer concisely. Do not add conversational filler.\n"
-        "4.  **Context Queries:** If asked to summarize the context, provide a brief, factual summary of the 'RAG CONTEXT' and nothing more.\n"
+        "Your task is to answer questions using ONLY the provided RAG CONTEXT."
+        "\n\n"
+        "Rules:\n"
+        "1. Every factual claim must be supported by the RAG CONTEXT.\n"
+        "2. You may paraphrase, summarize, or combine information from the context, but you may not add new facts or external knowledge.\n"
+        "3. If the RAG CONTEXT does not support an answer, respond exactly:\n"
+        "   \"The provided context does not contain enough information to answer this question.\"\n"
+        "4. Answer concisely and directly. No conversational filler.\n"
+        "5. If asked to summarize the context, provide a brief factual summary only.\n"
         "\n"
-        "Think of yourself as a search index, not a conversationalist. Your value is in your strict adherence to the provided text. Any deviation from this role is a failure.";
+        "Do not use external knowledge. Do not speculate.";
 
     // --- GUI Setup ---
     gui.setup("LLM Control");
@@ -189,14 +195,35 @@ void ofApp::onTemplateChange(string &t) {
         llama.addStopWord("<｜End｜>");
         llama.addStopWord("\n<｜User｜>");
         llama.addStopWord("\n<｜Assistant｜>");
+        llama.addStopWord("<｜end_of_turn｜>");
+        llama.addStopWord("<EndOfThought>");
+        llama.addStopWord("<EndofAssistantResponse>");
+        llama.addStopWord("<End of response>");
+        llama.addStopWord("</End of response>");
+        llama.addStopWord("<／Assistant〉");
+        llama.addStopWord("\n<／Assistant〉");
     }
     else if (t == "Phi4") {
         llama.addStopWord("<|im_end|>");
         llama.addStopWord("<|end|>");
+        llama.addStopWord("<｜end_of_turn｜>");
+        llama.addStopWord("<EndOfThought>");
+        llama.addStopWord("<EndofAssistantResponse>");
+        llama.addStopWord("<End of response>");
+        llama.addStopWord("</End of response>");
+        llama.addStopWord("<／Assistant〉");
+        llama.addStopWord("\n<／Assistant〉");
     }
     else if (t == "Teuken") {
         llama.addStopWord("User:");
         llama.addStopWord("Assistant:");
+        llama.addStopWord("<｜end_of_turn｜>");
+        llama.addStopWord("<EndOfThought>");
+        llama.addStopWord("<EndofAssistantResponse>");
+        llama.addStopWord("<End of response>");
+        llama.addStopWord("</End of response>");
+        llama.addStopWord("<／Assistant〉");
+        llama.addStopWord("\n<／Assistant〉");
     }
 
     // Re-create the chat template object with the new template string
@@ -250,24 +277,19 @@ void ofApp::startReplyGeneration() {
             {"role", isDeepSeek ? "user" : "system"},
             {"content", ragContext}
         });
+    } else {
+        messages.push_back({
+            {"role", isDeepSeek ? "user" : "system"},
+            {"content", "[RAG CONTEXT]\nNo context provided."}
+        });
     }
 
-    // 4. Add a sliding window of the recent chat history (e.g., last 4 messages)
-    int history_size = chatHistory.size();
-    int start_index = 0;
-    // Ensure we don't go below 0 for start_index
-    if (history_size > 4) { 
-        start_index = history_size - 4; // Only include the last 4 messages
-    }
-    
-    for (int i = start_index; i < history_size; ++i) {
-        const auto& msg = chatHistory[i];
-        if (!msg.content.empty()) {
-            messages.push_back({
-                {"role", msg.isUser ? "user" : "assistant"},
-                {"content", msg.content}
-            });
-        }
+    // 4. Add only the most recent user query to the prompt
+    if (!latestUserQuery.empty()) {
+        messages.push_back({
+            {"role", "user"},
+            {"content", latestUserQuery}
+        });
     }
 
     // 4. Apply the template to format the final prompt and start generation
@@ -279,6 +301,7 @@ void ofApp::startReplyGeneration() {
     
     ofLogNotice("ofApp PROMPT") << mPrompt;
 
+    llama.resetContext(); // Explicitly reset the context before generation
     llama.startGeneration(mPrompt, 1024); // Limit reply length to 1024 tokens
     wasGenerating = true; 
 }
@@ -323,6 +346,7 @@ void ofApp::update() {
                             chatHistory.back().content.erase(pos);
                         }
                     }
+                    ofLogNotice("ofApp ASSISTANT") << chatHistory.back().content;
                 }
                 // Transition back to the idle chatting state
                 currentState = CHATTING;
@@ -415,7 +439,7 @@ void ofApp::keyPressed(ofKeyEventArgs &args) {
     // Append typed characters to the input string
     if (args.codepoint >= 32) { // Ignore control characters
         ofUTF8Append(input, args.codepoint);
-    }
+    }    
 }
 
 //--------------------------------------------------------------
@@ -451,34 +475,33 @@ void ofApp::dragEvent(ofDragInfo dragInfo){
     }
 
     for(auto& file : dragInfo.files) {
+        std::string content = "";
+        std::string fileExtension = ofToLower(ofFilePath::getFileExt(file));
 
-        ofBuffer buffer = ofBufferFromFile(file);
-
-        if(buffer.size() > 0) {
-
-            std::string content = buffer.getText();
-
-            if(!content.empty()) {
-
-                                rag.addText(content, file);
-                                mContextUI.update(rag.getContextSources());
-
-                                ofLogNotice("ofApp") << "Dragged and added: " << file << ". RAG store size: " << rag.getStoreSize();
-
+        if (fileExtension == "pdf") {
+            ofxPoDoFo pdf;
+            if (pdf.load(file)) {
+                content = pdf.getText();
             } else {
-
-                ofLogWarning("ofApp") << "Dragged file is empty or could not be read: " << file;
-
+                ofLogWarning("ofApp") << "Could not load PDF file: " << file;
             }
-
         } else {
-
-            ofLogWarning("ofApp") << "Could not read dragged file: " << file;
-
+            ofBuffer buffer = ofBufferFromFile(file);
+            if(buffer.size() > 0) {
+                content = buffer.getText();
+            } else {
+                ofLogWarning("ofApp") << "Could not read dragged file: " << file;
+            }
         }
 
+        if(!content.empty()) {
+            rag.addText(content, file);
+            mContextUI.update(rag.getContextSources());
+            ofLogNotice("ofApp") << "Dragged and added: " << file << ". RAG store size: " << rag.getStoreSize();
+        } else {
+            ofLogWarning("ofApp") << "Dragged file is empty or could not be processed: " << file;
+        }
     }
-
 }
 
 

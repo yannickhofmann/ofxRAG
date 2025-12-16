@@ -60,9 +60,6 @@ void ofxRAG::addText(const std::string& text, const std::string& source) {
     for (size_t i = 0; i < chunks.size(); ++i) {
         Embedding embedding = embedText(chunks[i]);
         std::string chunkSource = source;
-        if (chunks.size() > 1) { // Append chunk index if there are multiple chunks
-            chunkSource += " (chunk " + ofToString(i + 1) + "/" + ofToString(chunks.size()) + ")";
-        }
         VectorMetadata meta = {nextId++, chunkSource, "text"};
         vectorStore->add(embedding, meta, chunks[i]);
     }

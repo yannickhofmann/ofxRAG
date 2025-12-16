@@ -32,6 +32,7 @@ public:
     void clear() override;
 
     size_t size() const override;
+    std::vector<std::string> getSources() const override;
 
 private:
 #ifdef USE_FAISS

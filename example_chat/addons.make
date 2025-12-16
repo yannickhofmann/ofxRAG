@@ -1,4 +1,6 @@
+ofxClipper
 ofxDropdown
 ofxGui
 ofxLlamaCpp
+ofxPoDoFo
 ofxRAG
