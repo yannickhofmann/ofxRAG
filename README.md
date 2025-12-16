@@ -71,6 +71,8 @@ brew install cmake
     [https://github.com/roymacdonald/ofxDropdown](https://github.com/roymacdonald/ofxDropdown)
 * **ofxLlamaCpp** (developed by [yannickhofmann](https://github.com/yannickhofmann)) is used in the example_chat to provide local, offline text generation using GGUF LLaMA-family models.
     [https://github.com/yannickhofmann/ofxLlamaCpp](https://github.com/yannickhofmann/ofxLlamaCpp)
+* **ofxPoDoFo** (developed by [nariakiiwatani](https://github.com/nariakiiwatani), forked and edited by Yannick Hofmann [yannickhofmann](https://github.com/yannickhofmann)) is used in example_chat to enable information retrieval from PDFs.
+    [https://github.com/yannickhofmann/ofxPoDoFo](https://github.com/yannickhofmann/ofxPoDoFo)
 
 ## Setup
 
