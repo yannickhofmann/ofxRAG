@@ -96,8 +96,7 @@ chmod +x download_models.sh
 Once the static libraries are compiled and the models are in place, you can build and run the example projects.
 The example_chat additionally requires at least one GGUF language model to be placed manually in the `data/models` folder.  
 Please refer to the `notes.txt` file inside the `data/models` directory for details and model recommendations.
-
-Navigate into the example folder you wish to build (e.g., `example_search`):
+The example does not include a Makefile. Generate the project using the openFrameworks Project Generator as usual. Then navigate into the example folder you wish to build (e.g., `example_search`):
 
 ```bash
 cd example_search
