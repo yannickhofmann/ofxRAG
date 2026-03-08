@@ -73,7 +73,9 @@ brew install cmake
     [https://github.com/yannickhofmann/ofxLlamaCpp](https://github.com/yannickhofmann/ofxLlamaCpp)
 * **ofxPoDoFo** (developed by [nariakiiwatani](https://github.com/nariakiiwatani), forked and edited by Yannick Hofmann [yannickhofmann](https://github.com/yannickhofmann)) is used in example_chat to enable information retrieval from PDFs.
     [https://github.com/yannickhofmann/ofxPoDoFo](https://github.com/yannickhofmann/ofxPoDoFo)
-
+* **ofxClipper** (developed by [bakercp](https://github.com/bakercp)) is a wrapper around ClipperLib providing polygon boolean operations, used in ofxPoDoFo to implement PDF clipping paths via geometric intersection of drawing and clipping paths.
+    [https://github.com/bakercp/ofxClipper](https://github.com/bakercp/ofxClipper)
+  
 ## Setup
 
 In the `scripts` folder, you will find a shell script to automatically clone and build the proper libraries. Navigate to the `scripts` folder and execute:
